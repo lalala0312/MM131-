@@ -8,10 +8,12 @@ import random
 import time
 import re
 import os
-
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 """
 请求头
 Referer：防盗链，不加上的话从外部跳转会转向一个错误的网址
+后续功能 UA池，ip代理池，多进程爬取
 """
 
 class MmSpider:
@@ -32,7 +34,7 @@ class MmSpider:
         i = 0
         while i < 3:
             try:
-                r = requests.get(url, headers=self.headers, timeout=(5, 10))
+                r = requests.get(url, headers=self.headers, timeout=(5, 10), verify=False)
                 if (r.status_code == 200):
                     r.encoding = 'GBK'
                     html = r.text
@@ -84,10 +86,10 @@ class MmSpider:
         module_info['module_amount'] = module_amount.group(1)
         module_info['module_name'] = module_name.group(1)
 
-        for i in range(2926, int(module_info['module_amount'])+1):                     # 循环从1开始遍历到最大图集数
+        for i in range(5513, int(module_info['module_amount'])+1):                     # 循环从1开始遍历到最大图集数
             module_info['atlas_url'] = self.url + str(i) + '.html'                  # 拼接出图集的html，上回中断到2926了
             self.get_one_atlas(info=module_info)
-            time.sleep(random.random()*2)
+            time.sleep(random.random()*0.05)
 
     def get_one_atlas(self, info):
         """
@@ -109,8 +111,9 @@ class MmSpider:
         """
         for i in range(1, int(pic_info['atlas_amount'])+1):
             base_url = pic_info['img_url'][:-5] + str(i) + '.jpg'           # 照片地址
-            resp = requests.get(base_url, headers=self.headers)             # 请求照片获得的响应
+            resp = requests.get(base_url, headers=self.headers, verify=False)             # 请求照片获得的响应
             title = pic_info['module_name'] + '/' + pic_info['pic_title']   # 照片的标题
+            title = title.replace(":", " ")
             file_path = 'D:/MM131/' + title + '/'                           # 存放图片的路径
             if not os.path.exists(file_path):
                 os.makedirs(file_path)
